@@ -1,25 +1,17 @@
+if turtle.getFuelLevel() == 0 then
+	turtle.refuel()
+end
 
-
-local ws, err = http.websocket("ws://localhost:8080")
+local ws, err = http.websocket("ws://localhost:5656")
 
 if err then
-	print(err)
+	print(string.format("Error: %s",err))
 elseif ws then
-	while true do
-		term.clear()
-		term.setCursorPos(1,1)
-		print("Running VosX v0.1")
-		--wsRequest.send(string.format("Turtle's coords are: %d, %d, %d.", curX, curY, curZ))
-		local rawMessage = ws.recieve()
-		if rawMessage == nil then
-			break
-		end
-		local message = textUtils.unserialiseJSON(rawMessage)
-		if message == nil then
-			print("womp")
-			break
-		else
-			print(message)
-		end
-	end
+	ws.send(string.format("Hi! I'm at %s, %s, %s",gps.locate()))
+	turtle.forward()
+	sleep(2)
+	ws.send(string.format("Now I'm at %s, %s, %s",gps.locate()))
+	turtle.turnLeft()
+	turtle.back()
+	ws.close()
 end

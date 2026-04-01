@@ -3,6 +3,76 @@
 
 <head>
 <title>CC Remote Turtle Access</title>
+<style>
+	@import url('https://fonts.cdnfonts.com/css/minecraft-4');
+	
+	.minecraftFont{
+		font-family: "Minecraft", Courier;
+		font-display: swap;
+		font-weight: 400;
+	}
+	
+</style>
+</head>
+<body style = "min-height: 85vh; background-image: url(stonebg.png); padding:3em;">
+	<div style = "min-height: 80vh; border: 0.5em solid; border-color: #dfde97 #898a48 #898a48 #dfde97; border-radius: 7px;">
+		<div style = "min-height: 75vh; border: 1.5em solid #c7c86e;">
+			<div style = "min-height: 75vh; border: 2px solid; border-color: #898a48 #dfde97 #dfde97 #898a48; display: flex;">
+				<div class = "mainDoc" style = "flex-grow: 1; background-color: black; padding: 1em; display: flex; flex-direction: column;">
+				<text class = "minecraftFont" style="color: white;">VoxOS RC Turtle Controller vAlpha</text>
+				<input class = "minecraftFont" type="number" id="computerID" placeholder="ID:" value="1" min="1" max="3" required size="5"/>
+				<input type="text" class = "minecraftFont" id="messageX" placeholder="X Coord:" />
+				<input type="text" class = "minecraftFont" id="messageY" placeholder="Y Coord:" />					<input type="text" class = "minecraftFont" id="messageZ" placeholder="Z Coord:" />
+				<button class = "minecraftFont" id="send">Send</button>
+				<text style="color:white;"></text>
+				</div>
+				<div style = "background-color: black; flex-grow: 1; padding: 1em;">
+					<text style="color:white;">"Display" to be worked on later (WIP!!!!)</text>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script>
+	const computerID = document.getElementById("computerID");
+	const messageX = document.getElementById("messageX");
+	const messageY = document.getElementById("messageY");
+	const messageZ = document.getElementById("messageZ");
+	const buttonSend = document.getElementById("send");
+	
+	const websocket = new WebSocket("ws://localhost:5656");
+	
+	websocket.onopen = function(){
+		websocket.send(JSON.stringify({operation:"rolecall", id:1}));
+		websocket.addEventListener("message", (e) => {
+			console.log(e.data);
+		});
+	}
+	
+	
+	
+	buttonSend.addEventListener("click", () => {
+		
+		if(computerID.value != "" && computerID.value >= 1 && computerID.value <= 3){
+	
+			var obj = {
+				id: computerID.value,
+				xPos: messageX.value,
+				yPos: messageY.value,
+				zPos: messageZ.value,
+			};
+			
+			websocket.send(JSON.stringify(obj));
+		}
+		
+	})
+	</script>
+	
+</body>
+</html><!DOCTYPE html>
+<html>
+
+<head>
+<title>CC Remote Turtle Access</title>
     <script async src="scripts/index.js"></script>
 </head>
 	<body>

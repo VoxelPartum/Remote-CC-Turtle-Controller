@@ -6,10 +6,45 @@
 <style>
 	@import url('https://fonts.cdnfonts.com/css/minecraft-4');
 	
+	
 	.minecraftFont{
 		font-family: "Minecraft", Courier;
 		font-display: swap;
 		font-weight: 400;
+		font-size: 20px;
+	}
+
+	.tooltip{
+		display: none;
+		position: absolute;
+		background-color: #c6c6c6;
+		color: black;
+		padding: 5px;
+		border-radius: 7px;
+		font-size: 12px;
+		font-family: "Minecraft", Courier;
+		z-index: 10;
+	}
+	
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		grid-gap: 5px;
+		max-width: 450px;
+		margin: auto;
+		position: relative;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+	
+	.grid > * {
+		aspect-ratio: 1 / 1;
+		border: 5px #224422 solid;
+	}
+	
+	.grid > *:hover {
+		aspect-ratio: 1 / 1;
+		border: 5px #446644 solid;
 	}
 	
 </style>
@@ -17,71 +52,147 @@
 <body style = "min-height: 85vh; background-image: url(stonebg.png); padding:3em;">
 	<div style = "min-height: 80vh; border: 0.5em solid; border-color: #dfde97 #898a48 #898a48 #dfde97; border-radius: 7px;">
 		<div style = "min-height: 75vh; border: 1.5em solid #c7c86e;">
-			<div style = "min-height: 75vh; border: 2px solid; border-color: #898a48 #dfde97 #dfde97 #898a48; display: flex;">
-				<div class = "mainDoc" style = "flex-grow: 1; background-color: black; padding: 1em; display: flex; flex-direction: column;">
-				<text class = "minecraftFont" style="color: white;">VoxOS RC Turtle Controller vAlpha</text>
-				<input class = "minecraftFont" type="number" id="computerID" placeholder="ID:" value="1" min="1" max="3" required size="5"/>
-				<input type="text" class = "minecraftFont" id="messageX" placeholder="X Coord:" />
-				<input type="text" class = "minecraftFont" id="messageY" placeholder="Y Coord:" />					<input type="text" class = "minecraftFont" id="messageZ" placeholder="Z Coord:" />
-				<button class = "minecraftFont" id="send">Send</button>
-				<text style="color:white;"></text>
+			<div>
+				<div id="errorScreen" style="border: 2px solid; border-color: #898a48 #dfde97 #dfde97 #898a48; display: none;">
+					<text class="minecraftFont" style="background-color:#000Fcc; min-height: 75vh; display:flex; justify-content: center; align-items:center; color:white;">Error with websocket. Is the server running?</text>
 				</div>
-				<div style = "background-color: black; flex-grow: 1; padding: 1em;">
-					<text style="color:white;">"Display" to be worked on later (WIP!!!!)</text>
+				<div id="mainScreen" style = "min-height: 75vh; display: flex;">
+					<div class = "mainDoc" style = "border: 2px solid; border-color: #898a48 #dfde97 #dfde97 #898a48; flex-grow: 1; background-color: black; padding: 1em; display: flex; flex-direction: column;">
+						<text class = "minecraftFont" style="color: white; padding-bottom: 15px">VoxOS RC Turtle Controller v1</text>
+						<input type="text" class = "minecraftFont" id="messageX" placeholder="X Coord:" />
+						<input type="text" class = "minecraftFont" id="messageY" placeholder="Y Coord:" />					<input type="text" class = "minecraftFont" id="messageZ" placeholder="Z Coord:" />
+						<button class = "minecraftFont" id="send">Send</button>
+						<text id = "curX" style="color:white; padding-top: 3rem;" class = "minecraftFont">Current X Coordinate:</text>
+						<text id = "curY" style="color:white;" class = "minecraftFont">Current Y Coordinate:</text>
+						<text id = "curZ" style="color:white;" class = "minecraftFont">Current Z Coordinate:</text>
+						<text id = "status" style="color:white;" class = "minecraftFont">Current Status: Idle.</text>
+					</div>
+					<div id="locationScreen" style = "border: 2px solid; border-color: #898a48 #dfde97 #dfde97 #898a48; background-color: #002200; flex-grow: 1; padding: 1em; position: relative;">
+						<div class = "grid">
+							<div class="gridTile" coord-tooltip="true" xOffset = "-1", zOffset="1"></div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "0", zOffset="1"></div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "1", zOffset="1"></div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "-1", zOffset="0"></div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "0", zOffset="0" style="border: 5px #898a48 solid;"></div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "1", zOffset="0"></div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "-1", zOffset="-1"></div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "0", zOffset="-1"></div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "1", zOffset="-1"></div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 	<script>
-	const computerID = document.getElementById("computerID");
+	
+	var tooltipText = "Unknown Block";
+	
 	const messageX = document.getElementById("messageX");
 	const messageY = document.getElementById("messageY");
 	const messageZ = document.getElementById("messageZ");
 	const buttonSend = document.getElementById("send");
 	
+	var displayXPos;
+	var displayYPos;
+	var displayZPos;
+	
 	const websocket = new WebSocket("ws://localhost:5656");
 	
 	websocket.onopen = function(){
-		websocket.send(JSON.stringify({operation:"rolecall", id:1}));
+		websocket.send(JSON.stringify({operation:"locate"}));
+		
 		websocket.addEventListener("message", (e) => {
-			console.log(e.data);
+			if(JSON.parse(e.data).operation == "sending"){
+				displayXPos = JSON.parse(e.data).xPos;
+				curXDisplay = document.getElementById("curX");
+				curXDisplay.innerHTML = "Current X Coordinate: "+displayXPos;
+				displayYPos = JSON.parse(e.data).yPos;
+				curXDisplay = document.getElementById("curY");
+				curXDisplay.innerHTML = "Current Y Coordinate: "+displayYPos;
+				displayZPos = JSON.parse(e.data).zPos;
+				curXDisplay = document.getElementById("curZ");
+				curXDisplay.innerHTML = "Current Z Coordinate: "+displayZPos;			
+			}
+			else if(JSON.parse(e.data).operation == "done"){
+				displayXPos = JSON.parse(e.data).xPos;
+				curXDisplay = document.getElementById("curX");
+				curXDisplay.innerHTML = "Current X Coordinate: "+displayXPos;
+				displayYPos = JSON.parse(e.data).yPos;
+				curXDisplay = document.getElementById("curY");
+				curXDisplay.innerHTML = "Current Y Coordinate: "+displayYPos;
+				displayZPos = JSON.parse(e.data).zPos;
+				curXDisplay = document.getElementById("curZ");
+				curXDisplay.innerHTML = "Current Z Coordinate: "+displayZPos;
+				var statusDisplay = document.getElementById("status");
+				statusDisplay.innerHTML = "Current Status: Idle.";
+			}
+			else if(JSON.parse(e.data).operation == "error"){
+				displayXPos = JSON.parse(e.data).xPos;
+				curXDisplay = document.getElementById("curX");
+				curXDisplay.innerHTML = "Current X Coordinate: "+displayXPos;
+				displayYPos = JSON.parse(e.data).yPos;
+				curXDisplay = document.getElementById("curY");
+				curXDisplay.innerHTML = "Current Y Coordinate: "+displayYPos;
+				displayZPos = JSON.parse(e.data).zPos;
+				curXDisplay = document.getElementById("curZ");
+				curXDisplay.innerHTML = "Current Z Coordinate: "+displayZPos;
+				var statusDisplay = document.getElementById("status");
+				status.innerHTML = "Current Status: Error!";
+			}
+			else if(JSON.parse(e.data).operation == "displayWorldInfo"){
+				tooltipText = JSON.parse(e.data).blockData;
+			}
 		});
 	}
 	
-	
+	websocket.addEventListener("error", (event) => {
+		console.log("WebSocket error: ", event);		
+		document.getElementById("errorScreen").style.display="block";
+		document.getElementById("mainScreen").style.display="none";
+		
+	});
 	
 	buttonSend.addEventListener("click", () => {
 		
-		if(computerID.value != "" && computerID.value >= 1 && computerID.value <= 3){
-	
-			var obj = {
-				id: computerID.value,
+		var obj = {
+				operation: "moving",
 				xPos: messageX.value,
 				yPos: messageY.value,
 				zPos: messageZ.value,
 			};
-			
+			if(parseInt(obj.xPos) == NaN){ obj.xPos = ""; }
+			if(parseInt(obj.yPos) == NaN){ obj.yPos = ""; }
+			if(parseInt(obj.zPos) == NaN){ obj.zPos = ""; }
 			websocket.send(JSON.stringify(obj));
-		}
+			
+			var statusDisplay = document.getElementById("status");
+			statusDisplay.innerHTML = "Current Status: Moving!";
 		
+	})
+	
+	document.addEventListener("DOMContentLoaded", function(){
+		const tooltip = document.createElement('div');
+		tooltip.className = "tooltip";
+		document.getElementById("locationScreen").appendChild(tooltip);
+		document.querySelectorAll("[coord-tooltip]").forEach(elem => {
+			elem.addEventListener("mouseenter", function(){
+				websocket.send(JSON.stringify({operation:"getWorldInfo", xCoord:Number(displayXPos)+Number(elem.getAttribute("xOffset")), yCoord:displayYPos-1, zCoord:Number(displayZPos)+Number(elem.getAttribute("zOffset"))}));
+				setTimeout(() => {
+					tooltip.textContent = tooltipText;
+				}, 5); //This does not seem like the smartest implementation, but I am on a little time crunch.
+				const rect = elem.getBoundingClientRect();
+				const bodyRect = document.getElementById("locationScreen").getBoundingClientRect();
+				tooltip.style.left = -1*(bodyRect.left-rect.left) +'px';
+				tooltip.style.top = (rect.top+5)+'px';
+				tooltip.style.display = "block";
+			})
+			elem.addEventListener("mouseleave",function(){
+				tooltip.style.display = "none";
+			})
+		});
 	})
 	</script>
 	
 </body>
-</html><!DOCTYPE html>
-<html>
-
-<head>
-<title>CC Remote Turtle Access</title>
-    <script async src="scripts/index.js"></script>
-</head>
-	<body>
-		<input 
-		type="text"
-		id="command"
-		name="test"
-		/>
-		
-		<button>Send</button>
-	</body>
 </html>

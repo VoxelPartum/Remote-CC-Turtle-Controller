@@ -2,7 +2,7 @@
 (Requires _Node.js_ & _CC:Tweaked_ v1.113.1)
 
 **Preparation:**
-Make sure [Node.js](https://nodejs.org/en) and [CC:Tweaked](https://www.curseforge.com/minecraft/mc-mods/cc-tweaked) are installed.
+Make sure [Node.js](https://nodejs.org/en), the "ws" package ('npm install ws'), and [CC:Tweaked](https://www.curseforge.com/minecraft/mc-mods/cc-tweaked) are installed.
 Before installing any programs, construct a constellation as directed [here](https://tweaked.cc/guide/gps_setup.html).
 
 **USAGE:**

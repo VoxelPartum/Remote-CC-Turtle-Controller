@@ -26,6 +26,14 @@
 		z-index: 10;
 	}
 	
+	.gridTile {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		font-family: "Minecraft", Courier;
+		color: #aaccaa;
+	}
+	
 	.grid {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -69,15 +77,15 @@
 					</div>
 					<div id="locationScreen" style = "border: 2px solid; border-color: #898a48 #dfde97 #dfde97 #898a48; background-color: #002200; flex-grow: 1; padding: 1em; position: relative;">
 						<div class = "grid">
-							<div class="gridTile" coord-tooltip="true" xOffset = "-1", zOffset="1"></div>
-							<div class="gridTile" coord-tooltip="true" xOffset = "0", zOffset="1"></div>
-							<div class="gridTile" coord-tooltip="true" xOffset = "1", zOffset="1"></div>
-							<div class="gridTile" coord-tooltip="true" xOffset = "-1", zOffset="0"></div>
-							<div class="gridTile" coord-tooltip="true" xOffset = "0", zOffset="0" style="border: 5px #898a48 solid;"></div>
-							<div class="gridTile" coord-tooltip="true" xOffset = "1", zOffset="0"></div>
 							<div class="gridTile" coord-tooltip="true" xOffset = "-1", zOffset="-1"></div>
-							<div class="gridTile" coord-tooltip="true" xOffset = "0", zOffset="-1"></div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "0", zOffset="-1">N</div>
 							<div class="gridTile" coord-tooltip="true" xOffset = "1", zOffset="-1"></div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "-1", zOffset="0">W</div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "0", zOffset="0" style="border: 5px #898a48 solid;"></div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "1", zOffset="0">E</div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "-1", zOffset="1"></div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "0", zOffset="1">S</div>
+							<div class="gridTile" coord-tooltip="true" xOffset = "1", zOffset="1"></div>
 						</div>
 					</div>
 				</div>
